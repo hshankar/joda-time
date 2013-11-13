@@ -1330,11 +1330,13 @@ public class DateTimeFormatterBuilder {
             int limit = Math.min(iMaxParsedDigits, text.length() - position);
 
             boolean negative = false;
+            boolean hasPlusSign = false;
             int length = 0;
             while (length < limit) {
                 char c = text.charAt(position + length);
                 if (length == 0 && (c == '-' || c == '+') && iSigned) {
                     negative = c == '-';
+                    hasPlusSign = c == '+';
 
                     // Next character must be a digit.
                     if (length + 1 >= limit || 
@@ -1342,13 +1344,8 @@ public class DateTimeFormatterBuilder {
                     {
                         break;
                     }
-
-                    if (negative) {
-                        length++;
-                    } else {
-                        // Skip the '+' for parseInt to succeed.
-                        position++;
-                    }
+                    
+                    length++;
                     // Expand the limit to disregard the sign character.
                     limit = Math.min(limit + 1, text.length() - position);
                     continue;
@@ -1367,10 +1364,14 @@ public class DateTimeFormatterBuilder {
             if (length >= 9) {
                 // Since value may exceed integer limits, use stock parser
                 // which checks for this.
-                value = Integer.parseInt(text.substring(position, position += length));
+            	if(hasPlusSign) {
+            		value = Integer.parseInt(text.substring(position + 1, position += length));
+            	} else {
+            		value = Integer.parseInt(text.substring(position, position += length));
+            	}
             } else {
                 int i = position;
-                if (negative) {
+                if (negative || hasPlusSign) {
                     i++;
                 }
                 try {
